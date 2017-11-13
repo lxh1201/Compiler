@@ -106,12 +106,12 @@ class LL_1:
         if token[0] == 'keywords':
             return 'type'
         elif token[0] == 'delimiter':
-            if  Symbols.Delimiter_table[token[1]] in '+-':
+            if  token[1] in '+-':
                 return 'w0'
-            elif  Symbols.Delimiter_table[token[1]] in '*/':
+            elif  token[1] in '*/':
                 return 'w1'
             else:
-                return Symbols.Delimiter_table[token[1]]
+                return token[1]
         else:
             return token[0]
 

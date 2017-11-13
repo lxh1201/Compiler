@@ -31,11 +31,9 @@ class Scanner:
                 exit(0)
         self.index = i
         if name in Keywords_table:
-            return ('keywords', Keywords_table.index(name))
-        if name in Name_table:
-            return ('symbol', Name_table.index(name))
-        Name_table.append(name)
-        return ('symbol', len(Name_table)-1)
+            return ('keywords', name)
+        else:
+            return ('symbol', name)
 
     def read_digit(self):
         def mdd(num):
@@ -57,14 +55,11 @@ class Scanner:
         am = machine(trans_table, [8])
         digit = am.get(self.text[self.index:], spaces + Delimiter_table)
         self.index += len(digit)
-        if digit in Constant_table:
-            return ('constant', Constant_table.index(digit))
-        Constant_table.append(digit)
-        return ('constant', len(Constant_table)-1)
+        return ('constant', digit)
 
     def read_bounds(self):
         self.index += 1
-        return ('delimiter', Delimiter_table.index(self.text[self.index-1]))
+        return ('delimiter', self.text[self.index-1])
 
     def read_chr(self):
         i = self.index + 1
@@ -75,10 +70,7 @@ class Scanner:
             i += 1
         self.index = i + 1
         s = self.text[tmp:i]
-        if s in Char_table:
-            return ('char', Char_table.index(s))
-        Char_table.append(s)
-        return ('char', len(Char_table)-1)
+        return ('char', s)
 
     def read_str(self):
         i = self.index + 1
@@ -89,10 +81,7 @@ class Scanner:
             i += 1
         self.index = i + 1
         s = self.text[tmp:i]
-        if s in String_table:
-            return ('string', String_table.index(s))
-        String_table.append(s)
-        return ('string', len(String_table)-1)
+        return ('string', s)
 
     def get_token(self):
         while self.index < self.length:

@@ -5,8 +5,10 @@ Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'acti
           'action_func_para', 'action_func', 'action_declare']
 Semantic = []
 
-__sym_table_stack = []
-__sym_table = []
+__global_table = []
+__func_table = []
+__in_func = False
+__func_record = []
 
 def produce_tmp():
     tmp = chr(random.randint(ord('A'), ord('Z')))
@@ -15,7 +17,7 @@ def produce_tmp():
         index += 1
         if tmp + str(index) not in Name_table:
             Name_table.append(tmp + str(index))
-            __sym_table.append([tmp + str(index), -1, -1, -1])
+            #__func_table.append([tmp + str(index), -1, -1, -1])
             return ['symbol', len(Name_table)-1]
 
 def produce_binop():
@@ -26,30 +28,40 @@ def produce_binop():
     Semantic.append(tmp)
     return [op, a, b, tmp]
 
-def get_index(table, name, appended, index=0):
-    if table != []:
-        tmp = [i[index] for i in table]
+def action_declare():
+    name = Semantic.pop()[1]
+    t = Semantic[-1][1]
+    if __in_func:
+        sym_table = __func_table
+    else:
+        sym_table = __global_table
+    if sym_table != []:
+        tmp = [i[0] for i in sym_table]
         if name in tmp:
-            return tmp.index(name)
-    table.append(appended)
-    return len(table) - 1
+            exit(-1)
+    sym_table.append([name, t, None, 'v', None])
+    Semantic.append(('symbol', len(sym_table)-1))
 
-def declare():
-    pass
+def action_func():
+    entry = __global_table[Semantic[-2][1]]
+    entry[3] = 'f'
+    entry[4] = [0, -1, []]
+    global __in_func, __func_record
+    __in_func = True
+    __func_record = []
 
-def fill_func_table():
-    pass
+def action_func_para():
+    print Semantic
+    name = Semantic.pop()[1]
+    t = Semantic.pop()[1]
 
-def parse_func_para():
-    pass
 
 
 def parse_action(name):
-    if name == 'action_add' or name == 'action_mul':
-        print produce_binop()
-    elif name == 'action_declare':
-        declare()
+    if name == 'action_declare':
+        action_declare()
     elif name == 'action_func':
-        fill_func_table()
+        action_func()
     elif name == 'action_func_para':
-        parse_func_para()
+        action_func_para()
+
