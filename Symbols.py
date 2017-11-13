@@ -1,4 +1,4 @@
-Keywords_table = ['int', 'void', 'char']
+Keywords_table = ['int', 'void', 'char', 'float']
 Delimiter_table = ['=', '>', '<', '+', '-', '*', '/', '{', '}', ',', ';', '(', ')', '[', ']']
 spaces = [' ', '\n', '\t', '\r']
 legal = ['_', '-']

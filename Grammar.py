@@ -10,7 +10,7 @@ Grammar = {
         ['Dec']
     ],
     'Func': [
-        ['(', 'action_func', 'Vars', ')', '{', 'action_func_start', 'Text', '}', 'action_func_end']
+        ['(', 'action_func_start', 'Vars', ')', '{', 'Text', 'action_func_end', '}']
     ],
     'Vars': [
         ['type', 'symbol', 'action_func_para', 'Nextvar'],
@@ -29,7 +29,7 @@ Grammar = {
         [';']
     ],
     'Text': [
-        ['type', 'symbol', 'Dec', 'Text'],
+        ['type', 'symbol', 'action_declare', 'Dec', 'Text'],
         ['Copy', 'Text'],
         '\x00'
     ],

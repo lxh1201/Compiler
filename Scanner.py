@@ -55,7 +55,7 @@ class Scanner:
         am = machine(trans_table, [8])
         digit = am.get(self.text[self.index:], spaces + Delimiter_table)
         self.index += len(digit)
-        return ('constant', digit)
+        return ('constant', [digit, 'int'])
 
     def read_bounds(self):
         self.index += 1

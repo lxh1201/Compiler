@@ -1,4 +1,4 @@
-class machine(object):
+class machine:
 
     # T = [{('a', 1), ('b', 2)}, {}]
 
