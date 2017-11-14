@@ -28,3 +28,11 @@ class Stack:
 
     def get_offset(self):
         return self.vars_ptr
+
+class Chunk:
+    def __init__(self):
+        self.quats = []
+
+    def put(self, quat):
+        self.quats.append(quat)
+

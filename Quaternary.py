@@ -1,6 +1,6 @@
 import random
 from Symbols import *
-from Stack import *
+from Assembly import *
 
 Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'action_func_end',
           'action_func_para', 'action_func', 'action_declare']
@@ -34,6 +34,8 @@ def produce_tmp(t1, t2):
 
 def get_entry(sym):
     if sym[0] == 'symbol':
+        if type(sym[1]) != str:
+            return sym
         name = sym[1]
         if __in_func:
             tmp = [i[0] for i in __func_table]
@@ -44,13 +46,15 @@ def get_entry(sym):
                 if name in tmp:
                     return (sym[0], (1, tmp.index(name)))
                 else:
+                    print name + ' not defined'
                     exit(-1)
         else:
             tmp = [i[0] for i in __global_table]
             if name in tmp:
                 return (sym[0], (0, tmp.index(name)))
             else:
-                exit(-2)
+                print name + ' not defined'
+                exit(-1)
     else:
         return sym
 
@@ -63,7 +67,8 @@ def get_type(token):
     elif token[0] == 'constant':
         return token[1][1]
     else:
-        exit(-6)
+        print 'type wrong'
+        exit(-1)
 
 def produce_binop():
     b = Semantic.pop()
@@ -73,8 +78,7 @@ def produce_binop():
     a = get_entry(a)
     tmp = produce_tmp(get_type(a), get_type(b))
     Semantic.append(tmp)
-    print (op, a, b, tmp)
-    print __func_table
+    return (op, a, b, tmp)
 
 def action_declare():
     name = Semantic.pop()[1]
@@ -83,7 +87,8 @@ def action_declare():
         if __func_table != []:
             tmp = [i[0] for i in __func_table]
             if name in tmp:
-                exit(-3)
+                print name + ' defined repeated'
+                exit(-1)
         entry = [name, t, None, 'v', None]
         __stack.put(entry)
         __func_table.append(entry)
@@ -92,11 +97,12 @@ def action_declare():
         if __global_table != []:
             tmp = [i[0] for i in __global_table]
             if name in tmp:
-                exit(-4)
+                print name + ' defined repeated'
+                exit(-1)
         entry = [name, t, None, 'v', None]
         __global_table.append(entry)
         index = len(__global_table) - 1
-    Semantic.append((t, (0, index)))
+    Semantic.append(('symbol', (0, index)))
 
 
 def action_func_start():
@@ -117,7 +123,8 @@ def action_func_para():
     if __func_table != []:
         tmp = [i[0] for i in __func_table]
         if name in tmp:
-            exit(-5)
+            print name + ' defined repeated'
+            exit(-1)
     entry = [name, t, None, 'vf', None]
     __stack.put(entry)
     __func_table.append(entry)
@@ -126,6 +133,14 @@ def action_func_end():
     #print __func_table
     #print Semantic
     pass
+
+def action_equal():
+    b = Semantic.pop()
+    op = Semantic.pop()
+    a = Semantic.pop()
+    b = get_entry(b)
+    a = get_entry(a)
+    return (op, b, None, a)
 
 def parse_action(name):
     if name == 'action_declare':
@@ -137,5 +152,7 @@ def parse_action(name):
     elif name == 'action_func_end':
         action_func_end()
     elif name == 'action_add' or name == 'action_mul':
-        produce_binop()
+        print produce_binop()
+    elif name == 'action_equal':
+        print action_equal()
 

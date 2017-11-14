@@ -25,10 +25,10 @@ class Scanner:
                 break
             else:
                 print 'name is illegal'
-                return -1
+                exit(-1)
             if num >= 1024:
                 print 'name is too long'
-                exit(0)
+                exit(-1)
         self.index = i
         if name in Keywords_table:
             return ('keywords', name)
@@ -55,7 +55,7 @@ class Scanner:
         am = machine(trans_table, [8])
         digit = am.get(self.text[self.index:], spaces + Delimiter_table)
         self.index += len(digit)
-        return ('constant', [digit, 'int'])
+        return ('constant', (digit, 'int'))
 
     def read_bounds(self):
         self.index += 1
@@ -66,6 +66,7 @@ class Scanner:
         tmp = i
         while self.text[i] != "'":
             if i == self.length - 1:
+                print "lost '"
                 exit(-1)
             i += 1
         self.index = i + 1
@@ -77,6 +78,7 @@ class Scanner:
         tmp = i
         while self.text[i] != '"':
             if i == self.length - 1:
+                print 'lost "'
                 exit(-1)
             i += 1
         self.index = i + 1

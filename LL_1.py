@@ -106,11 +106,12 @@ class LL_1:
         if token[0] == 'keywords':
             return 'type'
         elif token[0] == 'delimiter':
-            if  token[1] in '+-':
+            if token[1] in '+-':
                 return 'w0'
-            elif  token[1] in '*/':
+            elif token[1] in '*/':
                 return 'w1'
             else:
+                #print token[1]
                 return token[1]
         else:
             return token[0]
@@ -130,13 +131,15 @@ class LL_1:
                         for tmp3 in tmp2:
                             self.analysis_table[top][tmp3] = tmp
                 if name not in self.analysis_table[top]:
-                    return False
+                    print str(token) + ' wrong'
+                    exit(-1)
                 self.stack += list(self.analysis_table[top][name])[::-1]
                 top = self.stack.pop()
             elif top == '\x00':
                 top = self.stack.pop()
             elif name == top:
                 Semantic.append(token)
-                return True
+                return
             else:
-                return False
+                print str(token) + ' wrong'
+                exit(-1)

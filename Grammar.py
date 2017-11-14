@@ -21,7 +21,7 @@ Grammar = {
         '\x00'
     ],
     'Dec': [
-        ['Equal_Biao', 'Nextdec'],
+        ['Equal_Biao', 'action_equal', 'Nextdec'],
         [';']
     ],
     'Nextdec': [
@@ -30,18 +30,18 @@ Grammar = {
     ],
     'Text': [
         ['type', 'symbol', 'action_declare', 'Dec', 'Text'],
-        ['Copy', 'Text'],
+        ['Equal', 'Text'],
         '\x00'
     ],
-    'Copy': [
-        ['symbol', 'Equal_Biao', 'Nextcopy', ';']
+    'Equal': [
+        ['symbol', 'Equal_Biao', 'action_equal', 'NextEqual', ';']
     ],
-    'Nextcopy': [
-        [',', 'symbol', 'Equal_Biao', 'Nextcopy'],
+    'NextEqual': [
+        [',', 'symbol', 'Equal_Biao', 'action_equal', 'NextEqual'],
         '\x00'
     ],
     'Equal_Biao': [
-        ['=', 'Biao', 'action_equal'],
+        ['=', 'Biao'],
     ],
     'Biao': [
         ['T', 'E1']
