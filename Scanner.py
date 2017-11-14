@@ -54,6 +54,9 @@ class Scanner:
         ]
         am = machine(trans_table, [8])
         digit = am.get(self.text[self.index:], spaces + Delimiter_table)
+        if digit == '\x00':
+            print 'numbers wrong'
+            exit(-1)
         self.index += len(digit)
         return ('constant', (digit, 'int'))
 
@@ -89,7 +92,7 @@ class Scanner:
         while self.index < self.length:
             if self.text[self.index].isalpha() or self.text[self.index] == '_':
                 return self.read_alpha()
-            elif self.text[self.index].isdigit() or self.text[self.index] == '-':
+            elif self.text[self.index].isdigit():
                 return self.read_digit()
             elif self.text[self.index] in Delimiter_table:
                 return self.read_bounds()

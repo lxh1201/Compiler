@@ -1,3 +1,5 @@
+from Symbols import *
+
 class Stack:
     def __init__(self):
         self.args_ptr = 8
@@ -32,7 +34,17 @@ class Stack:
 class Chunk:
     def __init__(self):
         self.quats = []
+        # eax ebx ecx edx
+        self.Register = [None, None, None, None]
+
 
     def put(self, quat):
         self.quats.append(quat)
+
+    def optimize(self):
+        pass
+
+    def produce_asm(self):
+        self.optimize()
+
 

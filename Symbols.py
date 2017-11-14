@@ -3,8 +3,10 @@ Delimiter_table = ['=', '>', '<', '+', '-', '*', '/', '{', '}', ',', ';', '(', '
 spaces = [' ', '\n', '\t', '\r']
 legal = ['_', '-']
 
-Name_table = []
-Type_table = []
-Char_table = []
-String_table = []
-Constant_table = []
+Symtab_stack = []
+
+Global_symtab = []
+In_func = False
+Func_symtab = []
+Func_entry = []
+Func_stakc = []
