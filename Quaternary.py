@@ -23,7 +23,7 @@ def produce_tmp(t1, t2):
         index += 1
         tmp = str(index) + head
         if tmp not in [i[0] for i in Func_symtab] and tmp not in [i[0] for i in Global_symtab]:
-            tmp = [tmp, t, None, 'v', None, -1]
+            tmp = [tmp, t, None, 'v', None]
             Func_symtab.append(tmp)
             return ('tmp_sym', (0, len(Func_symtab)-1))
 
@@ -84,7 +84,7 @@ def action_declare():
             if name in tmp:
                 print name + ' defined repeated'
                 exit(-1)
-        entry = [name, t, None, 'v', None, 0]
+        entry = [name, t, None, 'v', None]
         Func_stakc.put(entry)
         Func_symtab.append(entry)
         index = len(Func_symtab) - 1
@@ -94,7 +94,7 @@ def action_declare():
             if name in tmp:
                 print name + ' defined repeated'
                 exit(-1)
-        entry = [name, t, None, 'v', None, 0]
+        entry = [name, t, None, 'v', None]
         Global_symtab.append(entry)
         index = len(Global_symtab) - 1
     Semantic.append(('symbol', (0, index)))
@@ -102,7 +102,7 @@ def action_declare():
 
 def action_func_start():
     global Func_entry, In_func, Func_stakc, __Chunk
-    assert (Semantic[-2][1][0] == 0)
+    assert Semantic[-2][1][0] == 0
     Func_entry = Global_symtab[Semantic[-2][1][1]]
     Func_entry[3] = 'f'
     Func_entry[4] = [0, -1, []]
@@ -121,7 +121,7 @@ def action_func_para():
         if name in tmp:
             print name + ' defined repeated'
             exit(-1)
-    entry = [name, t, None, 'vf', None, 0]
+    entry = [name, t, None, 'vf', None]
     Func_stakc.put(entry)
     Func_symtab.append(entry)
 

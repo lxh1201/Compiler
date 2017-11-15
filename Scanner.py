@@ -3,7 +3,7 @@
 import sys
 from Automachine import *
 from Symbols import *
-import os
+import ctypes
 
 class Scanner:
 
@@ -58,9 +58,15 @@ class Scanner:
             print 'numbers wrong'
             exit(-1)
         self.index += len(digit)
-        digit = eval(digit.replace('e', '*10**'))
-        print digit
-        return ('constant', (digit, 'int'))
+        if '.' in digit:
+            print "float isn't supported yet"
+            exit(0)
+        elif 'e' in digit:
+            print "e(10^n) isn't supported yet"
+            exit(0)
+        else:
+            out = ctypes.c_int32(eval(digit)).value
+            return ('constant', (out, 'int'))
 
     def read_bounds(self):
         self.index += 1

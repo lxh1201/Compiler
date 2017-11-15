@@ -1,7 +1,7 @@
-int ua;
+int b;
 
 int main(int argc, char arg)
 {
-    ua = 5 + 6* 2.3e23 + 3;
+    int a = b + 6 * 2 + 3;
     char c = 7;
 }
