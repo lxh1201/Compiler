@@ -14,7 +14,7 @@ class Stack:
             return 4
 
     def put(self, sym_entry):
-        if type(sym_entry) != list or len(sym_entry) != 5:
+        if type(sym_entry) != list:
             exit(-1)
         if sym_entry[4] != None:
             exit(-1)

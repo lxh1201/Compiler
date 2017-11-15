@@ -58,6 +58,8 @@ class Scanner:
             print 'numbers wrong'
             exit(-1)
         self.index += len(digit)
+        digit = eval(digit.replace('e', '*10**'))
+        print digit
         return ('constant', (digit, 'int'))
 
     def read_bounds(self):

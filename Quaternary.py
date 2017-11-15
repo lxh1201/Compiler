@@ -121,7 +121,7 @@ def action_func_para():
         if name in tmp:
             print name + ' defined repeated'
             exit(-1)
-    entry = [name, t, None, 'vf', None, ]
+    entry = [name, t, None, 'vf', None, 0]
     Func_stakc.put(entry)
     Func_symtab.append(entry)
 
