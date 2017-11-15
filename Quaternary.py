@@ -6,6 +6,8 @@ Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'acti
           'action_func_para', 'action_func', 'action_declare']
 Semantic = []
 
+__Chunk = None
+
 def produce_type(t1, t2):
     if t1 == 'int' and t2 == 'int':
         return 'int'
@@ -21,7 +23,7 @@ def produce_tmp(t1, t2):
         index += 1
         tmp = str(index) + head
         if tmp not in [i[0] for i in Func_symtab] and tmp not in [i[0] for i in Global_symtab]:
-            tmp = [tmp, t, None, 'v', None]
+            tmp = [tmp, t, None, 'v', None, -1]
             Func_symtab.append(tmp)
             return ('tmp_sym', (0, len(Func_symtab)-1))
 
@@ -82,7 +84,7 @@ def action_declare():
             if name in tmp:
                 print name + ' defined repeated'
                 exit(-1)
-        entry = [name, t, None, 'v', None]
+        entry = [name, t, None, 'v', None, 0]
         Func_stakc.put(entry)
         Func_symtab.append(entry)
         index = len(Func_symtab) - 1
@@ -92,20 +94,21 @@ def action_declare():
             if name in tmp:
                 print name + ' defined repeated'
                 exit(-1)
-        entry = [name, t, None, 'v', None]
+        entry = [name, t, None, 'v', None, 0]
         Global_symtab.append(entry)
         index = len(Global_symtab) - 1
     Semantic.append(('symbol', (0, index)))
 
 
 def action_func_start():
-    global Func_entry, In_func, Func_stakc
+    global Func_entry, In_func, Func_stakc, __Chunk
     assert (Semantic[-2][1][0] == 0)
     Func_entry = Global_symtab[Semantic[-2][1][1]]
     Func_entry[3] = 'f'
     Func_entry[4] = [0, -1, []]
     In_func = True
     Func_stakc = Stack()
+    __Chunk = Chunk()
 
 def action_func_para():
     name = Semantic.pop()[1]
@@ -118,14 +121,14 @@ def action_func_para():
         if name in tmp:
             print name + ' defined repeated'
             exit(-1)
-    entry = [name, t, None, 'vf', None]
+    entry = [name, t, None, 'vf', None, ]
     Func_stakc.put(entry)
     Func_symtab.append(entry)
 
 def action_func_end():
     #print Func_symtab
     #print Semantic
-    print Global_symtab
+    __Chunk.produce_asm()
     pass
 
 def action_equal():
@@ -146,7 +149,7 @@ def parse_action(name):
     elif name == 'action_func_end':
         action_func_end()
     elif name == 'action_add' or name == 'action_mul':
-        print produce_binop()
+        __Chunk.put(produce_binop())
     elif name == 'action_equal':
-        print action_equal()
+        __Chunk.put(action_equal())
 

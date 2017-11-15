@@ -35,7 +35,8 @@ class Chunk:
     def __init__(self):
         self.quats = []
         # eax ebx ecx edx
-        self.Register = [None, None, None, None]
+        self.register = [None, None, None, None]
+        self.active_info = []
 
 
     def put(self, quat):
@@ -44,7 +45,19 @@ class Chunk:
     def optimize(self):
         pass
 
+    def produce_active_infotab(self):
+        for quat in self.quats[::-1]:
+            if quat[0][0] != 'delimiter':
+                print 'to_do'
+                exit(0)
+            if quat[0][1] not in '+-*/=':
+                print 'to_do'
+                exit(0)
+
+
+
     def produce_asm(self):
         self.optimize()
+        self.produce_active_infotab()
 
 
