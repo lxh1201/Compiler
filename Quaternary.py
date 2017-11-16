@@ -4,9 +4,9 @@ from Assembly import Stack, Chunk
 
 Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'action_func_end',
           'action_func_para', 'action_func', 'action_declare']
-Semantic = []
+Semantic = [] # to create quaternary
 
-__Chunk = None
+__Chunk = None # to create assembly
 
 def produce_type(t1, t2):
     if t1 == 'int' and t2 == 'int':

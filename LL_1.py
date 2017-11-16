@@ -103,9 +103,7 @@ class LL_1:
         return ret
 
     def transfer(self, token):
-        if token[0] == 'keywords':
-            return 'type'
-        elif token[0] == 'delimiter':
+        if token[0] == 'delimiter':
             if token[1] in '+-':
                 return 'w0'
             elif token[1] in '*/':

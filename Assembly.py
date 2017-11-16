@@ -37,6 +37,8 @@ class Chunk:
         self.quats = []
         # eax ecx
         self.register = [None, None]
+        self.active_register = [-2, -2]
+        self.register_name = ['eax', 'edx']
         self.active_table = {}
         self.active_stack = []
         self.optz = [] # [[father_index], lchild_index, rchild_index, constant, symbol, tmp_symbol, op]
@@ -78,12 +80,12 @@ class Chunk:
 
     def optz_append(self, index, entry, clear=False, father=-1, lchild=-1, rchild=-1, op=None):
         if clear and entry[0] == 'symbol':
-            tmp = [i[4] for i in self.optz]
-            if entry in tmp and (self.optz[tmp.index(entry)][3] != None or self.optz[tmp.index(entry)][5] != []):
-                self.optz[tmp.index(entry)][4].remove(entry)
+            for tmp in self.optz:
+                if entry in tmp[4] and (tmp[3] != None or tmp[5] != []):
+
+                    tmp[4].remove(entry)
         if index >= 0:
             if entry[0] == 'constant':
-                print entry
                 self.optz[index][3] = entry[1][0]
             elif entry[0] == 'tmp_sym':
                 self.optz[index][5].append(entry)
@@ -149,9 +151,20 @@ class Chunk:
         del self.optz[b]
         del self.optz[a]
 
+    def get_token_fm_optz(self, index):
+        entry = self.optz[index]
+        if entry[3] != None:
+            return ('constant', (entry[3], 'int'))
+        elif entry[4] != []:
+            return entry[4][0]
+        elif entry[5] != []:
+            return entry[5][0]
+        else:
+            print 'somethings wrong'
+            exit(-1)
+
     def optimize(self):
         for entry in self.quats:
-            #print entry
             if entry[0][0] == 'delimiter' and entry[0][1] == '=':
                 index = self.get_optz_index(entry[1])
                 self.optz_append(index, entry[3], True)
@@ -190,9 +203,21 @@ class Chunk:
                         c = self.optz_append(-1, entry[3], True, -1, a, b, entry[0][1])
                         self.optz[a][0].append(c)
                         self.optz[b][0].append(c)
-        for i in self.optz:
-            #print i
-            pass
+        for entry in self.optz:
+            if entry[6] == None and entry[3] != None:
+                for i in entry[4]:
+                    self.optimized_quats.append((('delimiter', '='), ('constant', (entry[3], 'int')), None, i))
+            elif entry[6] != None:
+                assert entry[1] != -1 and entry[2] != -1
+                a = self.get_token_fm_optz(entry[1])
+                b = self.get_token_fm_optz(entry[2])
+                if entry[4] != []:
+                    for i in entry[4]:
+                        self.optimized_quats.append((('delimiter', entry[6]), a, b, i))
+                else:
+                    if entry[0] != []:
+                        self.optimized_quats.append((('delimiter', entry[6]), a, b, entry[5][0]))
+        self.quats = self.optimized_quats
 
 
     def cal_active(self, index, entry):
@@ -229,11 +254,93 @@ class Chunk:
             self.length -= 1
         self.active_stack = self.active_stack[::-1]
 
+    def location(self, entry):
+        assert entry != None
+        assert entry not in self.register
+        if entry[0] == 'constant':
+            return str(entry[1][0])
+        elif entry[0] == 'symbol':
+            if Symbols.In_func:
+                if entry[1][0] == 0:
+                    return '[ebp' + str(Symbols.Func_symtab[entry[1][1]][4]) + ']'
+                else:
+                    print 'to do'
+                    exit(0)
+            else:
+                print 'to do'
+                exit(0)
+        elif entry[0] == 'tmp_sym':
+            assert Symbols.Func_symtab[entry[1][1]][4] == None
+            Symbols.Func_stack.put(Symbols.Func_symtab[entry[1][1]])
+            i= Symbols.Func_symtab[entry[1][1]][4]
+            return '[ebp' + str(i) + ']'
+
+    def get_inactive_register(self):
+        for i in range(len(self.active_register)):
+            if self.active_register[i] < 0:
+                return i
+        return -1
+
+    def asm_op(self, des, src, op='mov'):
+        return op + ' ' + des + ', ' + src + ';'
+
+    def choose_inactive_register(self):
+        min_num = float('inf')
+        min_index = -1
+        for i in range(len(self.active_register)):
+            if self.active_register[i] == 0:
+                continue
+            if self.active_register[i] < min_num:
+                min_num = self.active_register[i]
+                min_index = i
+        if min_index != -1:
+            return min_index
+        else:
+            return 0
+
+
+    def produce_op_asm(self, entry, line):
+        if entry[1] in self.register:
+            index = self.register.index(entry[1])
+            r_name = self.register_name[index]
+            if self.active_register[index] >= 0:
+                i = self.get_inactive_register()
+                if i > 0:
+                    print self.asm_op(self.register_name[i], r_name)
+                    self.register[i] = self.register[index]
+                    self.active_register[i] = self.active_register[index]
+                else:
+                    print self.asm_op(self.location(self.register[index]), r_name)
+            self.active_register[index] = self.active_stack[line][0]
+        else:
+            i = self.get_inactive_register()
+            if i >= 0:
+                r_name = self.register_name[i]
+                print self.asm_op(self.register_name[i], self.location(entry[1]))
+                self.register[i] = entry[3]
+                self.active_register[i] = self.active_stack[line][0]
+            else:
+                to_clean = self.get_inactive_register()
+                r_name = self.register_name[to_clean]
+                print self.asm_op(self.location(self.register[to_clean]), self.register_name[to_clean])
+                print self.asm_op(self.register_name[to_clean], self.location(entry[1]))
+                self.register[to_clean] = entry[3]
+                self.active_register[to_clean] = self.active_stack[line][0]
+        if entry[0][1] == '+':
+            print self.asm_op(r_name, self.location(entry[2]), 'add')
+        elif entry[0][1] == '-':
+            print self.asm_op(r_name, self.location(entry[2]), 'sub')
+        else:
+            print 'to do'
+            exit(0)
 
     def produce_asm(self):
         self.optimize()
         self.length = len(self.quats)
         self.produce_active_infotab()
-        print Symbols.Func_stack.get_offset()
-
+        text = ''
+        for i in range(len(self.quats)):
+            entry = self.quats[i]
+            if entry[0][1] in '+-*/':
+                self.produce_op_asm(entry, i)
 

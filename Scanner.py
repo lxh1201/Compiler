@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
 from Automachine import machine
-from Symbols import Keywords_table, Delimiter_table, spaces, legal
+from Symbols import Type_table, Delimiter_table, spaces, legal
 import ctypes
 
 class Scanner:
@@ -30,8 +29,8 @@ class Scanner:
                 print 'name is too long'
                 exit(-1)
         self.index = i
-        if name in Keywords_table:
-            return ('keywords', name)
+        if name in Type_table:
+            return ('type', name)
         else:
             return ('symbol', name)
 
