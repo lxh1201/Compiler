@@ -9,6 +9,6 @@ Global_symtab = []
 In_func = False
 Func_symtab = []
 Func_entry = []
-Func_stakc = []
+Func_stack = None
 
 

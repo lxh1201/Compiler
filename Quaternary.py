@@ -1,6 +1,6 @@
 import random
-from Symbols import *
-from Assembly import *
+import Symbols
+from Assembly import Stack, Chunk
 
 Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'action_func_end',
           'action_func_para', 'action_func', 'action_declare']
@@ -22,29 +22,29 @@ def produce_tmp(t1, t2):
     while True:
         index += 1
         tmp = str(index) + head
-        if tmp not in [i[0] for i in Func_symtab] and tmp not in [i[0] for i in Global_symtab]:
+        if tmp not in [i[0] for i in Symbols.Func_symtab] and tmp not in [i[0] for i in Symbols.Global_symtab]:
             tmp = [tmp, t, None, 'v', None]
-            Func_symtab.append(tmp)
-            return ('tmp_sym', (0, len(Func_symtab)-1))
+            Symbols.Func_symtab.append(tmp)
+            return ('tmp_sym', (0, len(Symbols.Func_symtab)-1))
 
 def get_entry(sym):
     if sym[0] in ['symbol', 'tmp_sym']:
         if type(sym[1]) != str:
             return sym
         name = sym[1]
-        if In_func:
-            tmp = [i[0] for i in Func_symtab]
+        if Symbols.In_func:
+            tmp = [i[0] for i in Symbols.Func_symtab]
             if name in tmp:
                 return (sym[0], (0, tmp.index(name)))
             else:
-                tmp = [i[0] for i in Global_symtab]
+                tmp = [i[0] for i in Symbols.Global_symtab]
                 if name in tmp:
                     return (sym[0], (1, tmp.index(name)))
                 else:
                     print name + ' not defined'
                     exit(-1)
         else:
-            tmp = [i[0] for i in Global_symtab]
+            tmp = [i[0] for i in Symbols.Global_symtab]
             if name in tmp:
                 return (sym[0], (0, tmp.index(name)))
             else:
@@ -55,10 +55,10 @@ def get_entry(sym):
 
 def get_type(token):
     if token[0] in ['symbol', 'tmp_sym']:
-        if In_func and token[1][0] == 0:
-            return Func_symtab[token[1][1]][1]
+        if Symbols.In_func and token[1][0] == 0:
+            return Symbols.Func_symtab[token[1][1]][1]
         else:
-            return Global_symtab[token[1][1]][1]
+            return Symbols.Global_symtab[token[1][1]][1]
     elif token[0] == 'constant':
         return token[1][1]
     else:
@@ -78,52 +78,53 @@ def produce_binop():
 def action_declare():
     name = Semantic.pop()[1]
     t = Semantic[-1][1]
-    if In_func:
-        if Func_symtab != []:
-            tmp = [i[0] for i in Func_symtab]
+    if Symbols.In_func:
+        if Symbols.Func_symtab != []:
+            tmp = [i[0] for i in Symbols.Func_symtab]
             if name in tmp:
                 print name + ' defined repeated'
                 exit(-1)
         entry = [name, t, None, 'v', None]
-        Func_stakc.put(entry)
-        Func_symtab.append(entry)
-        index = len(Func_symtab) - 1
+        Symbols.Func_stack.put(entry)
+        Symbols.Func_symtab.append(entry)
+        index = len(Symbols.Func_symtab) - 1
     else:
-        if Global_symtab != []:
-            tmp = [i[0] for i in Global_symtab]
+        if Symbols.Global_symtab != []:
+            tmp = [i[0] for i in Symbols.Global_symtab]
             if name in tmp:
                 print name + ' defined repeated'
                 exit(-1)
         entry = [name, t, None, 'v', None]
-        Global_symtab.append(entry)
-        index = len(Global_symtab) - 1
+        Symbols.Global_symtab.append(entry)
+        index = len(Symbols.Global_symtab) - 1
     Semantic.append(('symbol', (0, index)))
 
 
 def action_func_start():
-    global Func_entry, In_func, Func_stakc, __Chunk
+    global __Chunk
     assert Semantic[-2][1][0] == 0
-    Func_entry = Global_symtab[Semantic[-2][1][1]]
-    Func_entry[3] = 'f'
-    Func_entry[4] = [0, -1, []]
-    In_func = True
-    Func_stakc = Stack()
+    Symbols.Func_entry = Symbols.Global_symtab[Semantic[-2][1][1]]
+    Symbols.Func_entry[3] = 'f'
+    Symbols.Func_entry[4] = [0, -1, []]
+    Symbols.In_func = True
+    Symbols.Func_stack = Stack()
     __Chunk = Chunk()
+
 
 def action_func_para():
     name = Semantic.pop()[1]
     t = Semantic.pop()[1]
-    sym_entry = Func_entry[4][2]
+    sym_entry = Symbols.Func_entry[4][2]
     sym_entry.append(t)
-    Func_entry[4][0] += 1
-    if Func_symtab != []:
-        tmp = [i[0] for i in Func_symtab]
+    Symbols.Func_entry[4][0] += 1
+    if Symbols.Func_symtab != []:
+        tmp = [i[0] for i in Symbols.Func_symtab]
         if name in tmp:
             print name + ' defined repeated'
             exit(-1)
     entry = [name, t, None, 'vf', None]
-    Func_stakc.put(entry)
-    Func_symtab.append(entry)
+    Symbols.Func_stack.put(entry)
+    Symbols.Func_symtab.append(entry)
 
 def action_func_end():
     #print Func_symtab

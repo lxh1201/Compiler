@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
-from Automachine import *
-from Symbols import *
+from Automachine import machine
+from Symbols import Keywords_table, Delimiter_table, spaces, legal
 import ctypes
 
 class Scanner:

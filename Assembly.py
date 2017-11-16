@@ -1,4 +1,4 @@
-from Symbols import *
+import Symbols
 import ctypes
 
 class Stack:
@@ -46,9 +46,9 @@ class Chunk:
     def get_name(self, entry):
         assert entry[0] in ['tmp_sym', 'symbol']
         if entry[1][0] == 0:
-            return Func_symtab[entry[1][1]][0]
+            return Symbols.Func_symtab[entry[1][1]][0]
         else:
-            return Global_symtab[entry[1][1]][0]
+            return Symbols.Global_symtab[entry[1][1]][0]
 
     def put(self, quat):
         self.quats.append(quat)
@@ -151,7 +151,7 @@ class Chunk:
 
     def optimize(self):
         for entry in self.quats:
-            print entry
+            #print entry
             if entry[0][0] == 'delimiter' and entry[0][1] == '=':
                 index = self.get_optz_index(entry[1])
                 self.optz_append(index, entry[3], True)
@@ -191,7 +191,8 @@ class Chunk:
                         self.optz[a][0].append(c)
                         self.optz[b][0].append(c)
         for i in self.optz:
-            print i
+            #print i
+            pass
 
 
     def cal_active(self, index, entry):
@@ -233,4 +234,6 @@ class Chunk:
         self.optimize()
         self.length = len(self.quats)
         self.produce_active_infotab()
+        print Symbols.Func_stack.get_offset()
+
 

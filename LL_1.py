@@ -1,7 +1,7 @@
 import Symbols
 import copy
 
-from Quaternary import *
+from Quaternary import Action, Semantic, parse_action
 
 class LL_1:
 

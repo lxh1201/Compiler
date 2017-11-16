@@ -1,4 +1,4 @@
-from Scanner import *
+from Scanner import Scanner
 import Grammar
 from LL_1 import LL_1
 
