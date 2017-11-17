@@ -210,7 +210,7 @@ def action_call_func():
     while tmp[1] != '(':
         args_stack.append(get_token(tmp))
         tmp = Semantic.pop()
-    entry = get_entry(get_token(Semantic[-1]))
+    entry = get_entry(get_token(Semantic.pop()))
     if len(entry[4]) != len(args_stack):
         print entry[0] + ": func args don't match"
         exit(-1)
@@ -218,7 +218,10 @@ def action_call_func():
         if a != get_entry(b)[1]:
             print entry[0] + ": func args don't match"
             exit(-1)
-    pass
+    entry = [entry[0], entry[1], None, 'cf', args_stack]
+    Symbols.Called_func.append(entry)
+    Semantic.append(('symbol', (-1, len(Symbols.Called_func) - 1)))
+
 
 def parse_action(name):
     if Symbols.Is_ret and name != 'action_func_end':
