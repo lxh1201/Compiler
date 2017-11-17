@@ -139,4 +139,4 @@ class LL_1:
                 return
             else:
                 print str(token) + ' wrong'
-                exit(-1)
+                exit(-2)

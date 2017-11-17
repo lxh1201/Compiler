@@ -181,6 +181,13 @@ class Chunk:
             else:
                 a = self.get_optz_index(entry[1])
                 b = self.get_optz_index(entry[2])
+
+
+
+
+
+
+
                 if self.optz[a][3] != None and self.optz[b][3] != None:
                     tmp = self.get_same_father_index(self.optz[a], self.optz[b], None)
                     appended = False
@@ -223,11 +230,17 @@ class Chunk:
                 else:
                     if entry[0] != []:
                         self.optimized_quats.append((('delimiter', entry[6]), a, b, entry[5][0]))
+            else:
+                for i in range(len(entry[4]) - 1):
+                    self.optimized_quats.append((('delimiter', '='), entry[4][i], None, entry[4][i+1]))
         self.quats = self.optimized_quats
 
 
     def cal_active(self, index, entry):
         if entry == None or entry[0] == 'constant':
+            return
+        if entry[0] == 'symbol' and entry[1][0] == -1:
+            self.active_stack[-1][index] = -1
             return
         name = self.get_name(entry)
         if name not in self.active_table.keys():
@@ -349,7 +362,13 @@ class Chunk:
                     self.text += '\t' + self.asm_op(self.location(self.ret), self.register_name[0]) + '\n'
             self.text += '\tleave\n\tret\n'
 
+    def push_entry(self, entry):
+        addr = self.location(entry)
+        self.text += '\tpushl ' + addr + '\n'
+
     def produce_asm(self):
+        for i in self.quats:
+            print i
         self.optimize()
         self.length = len(self.quats)
         self.produce_active_infotab()
@@ -358,7 +377,13 @@ class Chunk:
             if entry[0][1] in '+-*/':
                 self.produce_op_asm(entry, i)
             elif entry[0][1] == '=':
-                self.text += '\t' + self.asm_op(self.location(entry[1]), self.location(entry[3])) + '\n'
+                if entry[3][0] == 'symbol' and entry[3][1][0] == -1:
+                    self.push_entry(entry[1])
+                elif entry[1][1][0] == -1:
+                    self.text += '\tcall ' + entry[1][1][1] + '\n'
+                    self.text += '\t' + self.asm_op('%eax', self.location(entry[3])) + '\n'
+                else:
+                    self.text += '\t' + self.asm_op(self.location(entry[1]), self.location(entry[3])) + '\n'
         self.save_all()
         return self.text
 

@@ -40,7 +40,6 @@ Grammar = {
     ],
     'Equal': [
         ['symbol', 'Equal_Biao', 'action_equal', 'NextEqual', ';'],
-        ['Biao', 'NextBiao', ';']
     ],
     'NextEqual': [
         [',', 'symbol', 'Equal_Biao', 'action_equal', 'NextEqual'],
@@ -88,6 +87,75 @@ Grammar = {
         '\x00'
     ]
 }
+
+'''
+Grammar = {
+    'Program': [
+        ['type', 'symbol', 'action_declare', 'Program_level2', 'Program'],
+        '\x00'
+    ],
+    'Program_level2': [
+        ['(', 'Func_args', ')' + '{' + 'Text' + '}'],
+        ['Equal_constant', 'Next_global_sym', ';']
+    ],
+    'Func_args': [
+        ['type', 'symbol', 'Func_args_level2'],
+        '\x00'
+    ],
+    'Func_args_level2': [
+        [',', 'type', 'symbol', 'Func_args_level2'],
+        '\x00'
+    ],
+    'Next_global_sym': [
+        [',', 'symbol', 'action_declare', 'Equal_constant', 'Next_global_sym'],
+        '\x00'
+    ],
+    'Equal_constant': [
+        ['=', 'constant'],
+        '\x00'
+    ],
+    'Text': [
+        ['type', 'symbol', 'action_declare', 'Equal_sth', 'Next_local_sym', ';', 'Text'],
+        ['symbol', 'Next_sym_level1', ';', 'Text'],
+        ['return', 'Expression', ';', 'Text'],
+        [';', 'Text'],
+        '\x00'
+    ],
+    'Equal_sth': [
+        ['=', 'Expression'],
+        '\x00'
+    ],
+    'Next_local_sym': [
+        [',', 'symbol', 'action_declare', 'Equal_sth', 'Next_local_sym'],
+        '\x00'
+    ],
+
+    'Next_sym_level1': [
+        ['Equal_sth', 'Next_sym_level2']
+    ],
+    'Next_sym_level2': [
+        [',', 'symbol', ],
+        '\x00'
+    ],
+
+    'I': [
+        ['constant'],
+        ['symbol', 'Call_func']
+    ],
+    'Call_func': [
+        ['(', 'Call_func_args', ')'],
+        '\x00'
+    ],
+    'Call_func_args': [
+        ['Expression', 'Call_func_args_level2'],
+        '\x00'
+    ],
+    'Call_func_args_level2': [
+        [',', 'Expression', 'Call_func_args_level2'],
+        '\x00'
+    ]
+}
+'''
 
 Start = 'Program'
 End = Symbols.Delimiter_table + ['symbol', 'constant', 'type', 'w0', 'w1', 'return']

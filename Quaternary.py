@@ -218,9 +218,9 @@ def action_call_func():
         if a != get_entry(b)[1]:
             print entry[0] + ": func args don't match"
             exit(-1)
-    entry = [entry[0], entry[1], None, 'cf', args_stack]
-    Symbols.Called_func.append(entry)
-    Semantic.append(('symbol', (-1, len(Symbols.Called_func) - 1)))
+    for i in args_stack[::-1]:
+        __Chunk.put((('delimiter', '='), i, None, ('symbol', (-1, -1))))
+    Semantic.append(('symbol', (-1, entry[0])))
 
 
 def parse_action(name):
