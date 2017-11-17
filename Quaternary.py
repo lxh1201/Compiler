@@ -8,6 +8,16 @@ Semantic = [] # to create quaternary
 
 __Chunk = None # to create assembly
 
+__Section_data = '.section .data\n'
+__Section_text = '''
+.section .text
+.globl _start
+_start:
+\tcall main
+\tmovl $1, %eax
+\tint $0x80
+'''
+
 def produce_type(t1, t2):
     if t1 == 'int' and t2 == 'int':
         return 'int'
@@ -76,6 +86,7 @@ def produce_binop():
     return (op, a, b, tmp)
 
 def action_declare():
+    global __Section_data
     name = Semantic.pop()[1]
     t = Semantic[-1][1]
     if Symbols.In_func:
@@ -127,10 +138,14 @@ def action_func_para():
     Symbols.Func_symtab.append(entry)
 
 def action_func_end():
-    #print Func_symtab
-    #print Semantic
-    __Chunk.produce_asm()
-    pass
+    global __Section_text, __Chunk
+    __Section_text += Symbols.Func_entry[0] + ':\n'
+    __Section_text +=__Chunk.produce_asm()
+    __Chunk = None
+    Symbols.Func_entry = []
+    Symbols.Func_symtab = []
+    Symbols.Func_stack = None
+    Symbols.In_func = False
 
 def action_equal():
     b = Semantic.pop()
@@ -154,3 +169,9 @@ def parse_action(name):
     elif name == 'action_equal':
         __Chunk.put(action_equal())
 
+def get_asm():
+    global __Section_data
+    for entry in Symbols.Global_symtab:
+        if entry[3] == 'v':
+            __Section_data += entry[0] + ':\n\t.long 0\n'
+    return __Section_data + __Section_text

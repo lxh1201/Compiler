@@ -44,6 +44,7 @@ class Chunk:
         self.optz = [] # [[father_index], lchild_index, rchild_index, constant, symbol, tmp_symbol, op]
         self.tree_exist_table = {}
         self.optimized_quats = []
+        self.text = ''
 
     def get_name(self, entry):
         assert entry[0] in ['tmp_sym', 'symbol']
@@ -279,7 +280,7 @@ class Chunk:
         return -1
 
     def asm_op(self, src, des, op='movl'):
-        return op + ' ' + src + ', ' + des + ';'
+        return op + ' ' + src + ', ' + des
 
     def choose_inactive_register(self):
         min_num = float('inf')
@@ -303,59 +304,50 @@ class Chunk:
             if self.active_register[index] >= 0:
                 i = self.get_inactive_register()
                 if i > 0:
-                    print self.asm_op(r_name, self.register_name[i])
+                    self.text += '\t' + self.asm_op(r_name, self.register_name[i]) + '\n'
                     self.register[i] = self.register[index]
                     self.active_register[i] = self.active_register[index]
                 else:
-                    print self.asm_op(r_name, self.location(self.register[index]))
+                    self.text += '\t' + self.asm_op(r_name, self.location(self.register[index])) + '\n'
             self.active_register[index] = self.active_stack[line][2]
         else:
             i = self.get_inactive_register()
             if i >= 0:
                 r_name = self.register_name[i]
-                print self.asm_op(self.location(entry[1]), self.register_name[i])
+                self.text += '\t' + self.asm_op(self.location(entry[1]), self.register_name[i]) + '\n'
                 self.register[i] = entry[3]
                 self.active_register[i] = self.active_stack[line][2]
             else:
                 to_clean = self.get_inactive_register()
                 r_name = self.register_name[to_clean]
-                print self.asm_op(self.register_name[to_clean], self.location(self.register[to_clean]))
-                print self.asm_op(self.location(entry[1]), self.register_name[to_clean])
+                self.text += '\t' + self.asm_op(self.register_name[to_clean], self.location(self.register[to_clean])) + '\n'
+                self.text += '\t' + self.asm_op(self.location(entry[1]), self.register_name[to_clean]) + '\n'
                 self.register[to_clean] = entry[3]
                 self.active_register[to_clean] = self.active_stack[line][2]
         if entry[0][1] == '+':
-            print self.asm_op(self.location(entry[2]), r_name, 'addl')
+            self.text += '\t' + self.asm_op(self.location(entry[2]), r_name, 'addl') + '\n'
         elif entry[0][1] == '-':
-            print self.asm_op(self.location(entry[2]), r_name, 'subl')
-        elif entry[0][1] != '=':
+            self.text += '\t' + self.asm_op(self.location(entry[2]), r_name, 'subl') + '\n'
+        else:
             print 'to_do'
             exit(0)
 
     def save_all(self):
         for i in range(len(self.register)):
             if self.active_register[i] >= 0:
-                print self.asm_op(self.register_name[i], self.location(self.register[i]))
-
-    def initial(self):
-        print '.section .data'
-        for i in Symbols.Global_symtab:
-            if i[3] == 'v':
-                print i[0] + ':'
-                print '.long 0'
-        print '.section .text'
-        print '.global _start'
-        print '_start:'
+                self.text += '\t' + self.asm_op(self.register_name[i], self.location(self.register[i])) + '\n'
 
     def produce_asm(self):
         self.optimize()
         self.length = len(self.quats)
         self.produce_active_infotab()
-        text = ''
-        self.initial()
         for i in range(len(self.quats)):
             entry = self.quats[i]
-            if entry[0][1] in '+-*/=':
+            if entry[0][1] in '+-*/':
                 self.produce_op_asm(entry, i)
+            elif entry[0][1] == '=':
+                self.text += '\t' + self.asm_op(self.location(entry[1]), self.location(entry[3])) + '\n'
         self.save_all()
+        return self.text
 
 
