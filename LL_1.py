@@ -80,7 +80,6 @@ class LL_1:
 
     def select(self, head, sentense):
         ret = []
-        sen = self.parse(sentense)
         for i in range(len(sentense)):
             if sentense[i] in self.end:
                 return [sentense[i]]

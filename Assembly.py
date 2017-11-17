@@ -38,7 +38,7 @@ class Chunk:
         # eax ecx
         self.register = [None, None]
         self.active_register = [-2, -2]
-        self.register_name = ['eax', 'edx']
+        self.register_name = ['%eax', '%edx']
         self.active_table = {}
         self.active_stack = []
         self.optz = [] # [[father_index], lchild_index, rchild_index, constant, symbol, tmp_symbol, op]
@@ -256,24 +256,21 @@ class Chunk:
 
     def location(self, entry):
         assert entry != None
-        assert entry not in self.register
         if entry[0] == 'constant':
-            return str(entry[1][0])
+            return '$' + str(entry[1][0])
         elif entry[0] == 'symbol':
             if Symbols.In_func:
                 if entry[1][0] == 0:
-                    return '[ebp' + str(Symbols.Func_symtab[entry[1][1]][4]) + ']'
+                    return str(Symbols.Func_symtab[entry[1][1]][4]) + '(%ebp)'
                 else:
-                    print 'to do'
-                    exit(0)
+                    return Symbols.Global_symtab[entry[1][1]][0]
             else:
-                print 'to do'
-                exit(0)
+                return Symbols.Global_symtab[entry[1][1]][0]
         elif entry[0] == 'tmp_sym':
             assert Symbols.Func_symtab[entry[1][1]][4] == None
             Symbols.Func_stack.put(Symbols.Func_symtab[entry[1][1]])
             i= Symbols.Func_symtab[entry[1][1]][4]
-            return '[ebp' + str(i) + ']'
+            return '[%ebp' + str(i) + ']'
 
     def get_inactive_register(self):
         for i in range(len(self.active_register)):
@@ -281,8 +278,8 @@ class Chunk:
                 return i
         return -1
 
-    def asm_op(self, des, src, op='mov'):
-        return op + ' ' + des + ', ' + src + ';'
+    def asm_op(self, src, des, op='movl'):
+        return op + ' ' + src + ', ' + des + ';'
 
     def choose_inactive_register(self):
         min_num = float('inf')
@@ -306,41 +303,59 @@ class Chunk:
             if self.active_register[index] >= 0:
                 i = self.get_inactive_register()
                 if i > 0:
-                    print self.asm_op(self.register_name[i], r_name)
+                    print self.asm_op(r_name, self.register_name[i])
                     self.register[i] = self.register[index]
                     self.active_register[i] = self.active_register[index]
                 else:
-                    print self.asm_op(self.location(self.register[index]), r_name)
-            self.active_register[index] = self.active_stack[line][0]
+                    print self.asm_op(r_name, self.location(self.register[index]))
+            self.active_register[index] = self.active_stack[line][2]
         else:
             i = self.get_inactive_register()
             if i >= 0:
                 r_name = self.register_name[i]
-                print self.asm_op(self.register_name[i], self.location(entry[1]))
+                print self.asm_op(self.location(entry[1]), self.register_name[i])
                 self.register[i] = entry[3]
-                self.active_register[i] = self.active_stack[line][0]
+                self.active_register[i] = self.active_stack[line][2]
             else:
                 to_clean = self.get_inactive_register()
                 r_name = self.register_name[to_clean]
-                print self.asm_op(self.location(self.register[to_clean]), self.register_name[to_clean])
-                print self.asm_op(self.register_name[to_clean], self.location(entry[1]))
+                print self.asm_op(self.register_name[to_clean], self.location(self.register[to_clean]))
+                print self.asm_op(self.location(entry[1]), self.register_name[to_clean])
                 self.register[to_clean] = entry[3]
-                self.active_register[to_clean] = self.active_stack[line][0]
+                self.active_register[to_clean] = self.active_stack[line][2]
         if entry[0][1] == '+':
-            print self.asm_op(r_name, self.location(entry[2]), 'add')
+            print self.asm_op(self.location(entry[2]), r_name, 'addl')
         elif entry[0][1] == '-':
-            print self.asm_op(r_name, self.location(entry[2]), 'sub')
-        else:
-            print 'to do'
+            print self.asm_op(self.location(entry[2]), r_name, 'subl')
+        elif entry[0][1] != '=':
+            print 'to_do'
             exit(0)
+
+    def save_all(self):
+        for i in range(len(self.register)):
+            if self.active_register[i] >= 0:
+                print self.asm_op(self.register_name[i], self.location(self.register[i]))
+
+    def initial(self):
+        print '.section .data'
+        for i in Symbols.Global_symtab:
+            if i[3] == 'v':
+                print i[0] + ':'
+                print '.long 0'
+        print '.section .text'
+        print '.global _start'
+        print '_start:'
 
     def produce_asm(self):
         self.optimize()
         self.length = len(self.quats)
         self.produce_active_infotab()
         text = ''
+        self.initial()
         for i in range(len(self.quats)):
             entry = self.quats[i]
-            if entry[0][1] in '+-*/':
+            if entry[0][1] in '+-*/=':
                 self.produce_op_asm(entry, i)
+        self.save_all()
+
 
