@@ -133,27 +133,39 @@ class Chunk:
             return -1
 
     def move_index(self, a, b):
-        c = a
-        d = b
-        a = min(c, d)
-        b = max(c, d)
-        for entry in self.optz:
-            for i in range(len(entry[0])):
-                if entry[0][i] > b:
-                    entry[0][i] -= 2
-                elif entry[0][i] > a:
-                    entry[0][i] -= 1
-            for i in range(1, 3):
-                if entry[i] > b:
-                    entry[i] -= 2
-                elif entry[i] > a:
-                    entry[i] -= 1
+        if a == b:
+            for entry in self.optz:
+                for i in range(len(entry[0])):
+                    if entry[0][i] > a:
+                        entry[0][i] -= 1
+                for i in range(1, 3):
+                    if entry[i] > a:
+                        entry[i] -= 1
+        else:
+            c = a
+            d = b
+            a = min(c, d)
+            b = max(c, d)
+            for entry in self.optz:
+                for i in range(len(entry[0])):
+                    if entry[0][i] > b:
+                        entry[0][i] -= 2
+                    elif entry[0][i] > a:
+                        entry[0][i] -= 1
+                for i in range(1, 3):
+                    if entry[i] > b:
+                        entry[i] -= 2
+                    elif entry[i] > a:
+                        entry[i] -= 1
         for i in self.optz[a][4]:
             self.optimized_quats.append((('delimiter', '='), ('constant', (self.optz[a][3], 'int')), None, i))
         for i in self.optz[b][4]:
             self.optimized_quats.append((('delimiter', '='), ('constant', (self.optz[b][3], 'int')), None, i))
-        del self.optz[b]
-        del self.optz[a]
+        if a == b:
+            del self.optz[a]
+        else:
+            del self.optz[b]
+            del self.optz[a]
 
     def get_token_fm_optz(self, index):
         entry = self.optz[index]
@@ -181,13 +193,6 @@ class Chunk:
             else:
                 a = self.get_optz_index(entry[1])
                 b = self.get_optz_index(entry[2])
-
-
-
-
-
-
-
                 if self.optz[a][3] != None and self.optz[b][3] != None:
                     tmp = self.get_same_father_index(self.optz[a], self.optz[b], None)
                     appended = False
@@ -367,8 +372,6 @@ class Chunk:
         self.text += '\tpushl ' + addr + '\n'
 
     def produce_asm(self):
-        for i in self.quats:
-            print i
         self.optimize()
         self.length = len(self.quats)
         self.produce_active_infotab()
