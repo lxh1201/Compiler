@@ -3,7 +3,8 @@ import Symbols
 from Assembly import Stack, Chunk
 
 Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'action_func_end',
-          'action_func_para', 'action_func', 'action_declare', 'action_return']
+          'action_func_para', 'action_func', 'action_declare', 'action_return', 'action_call_func',
+          ]
 Semantic = [] # to create quaternary
 
 __Chunk = None # to create assembly
@@ -127,7 +128,7 @@ def action_func_start():
     assert Semantic[-2][1][0] == 0
     Symbols.Func_entry = Symbols.Global_symtab[Semantic[-2][1][1]]
     Symbols.Func_entry[3] = 'f'
-    Symbols.Func_entry[4] = [0, -1, []]
+    Symbols.Func_entry[4] = []
     Symbols.In_func = True
     Symbols.Is_ret = False
     Symbols.Func_stack = Stack()
@@ -137,9 +138,8 @@ def action_func_start():
 def action_func_para():
     name = Semantic.pop()[1]
     t = Semantic.pop()[1]
-    sym_entry = Symbols.Func_entry[4][2]
+    sym_entry = Symbols.Func_entry[4]
     sym_entry.append(t)
-    Symbols.Func_entry[4][0] += 1
     if Symbols.Func_symtab != []:
         tmp = [i[0] for i in Symbols.Func_symtab]
         if name in tmp:
@@ -158,6 +158,7 @@ def action_func_end(is_ret=False):
     if off != 0:
         __Section_text += '\tsubl $%d, %%esp\n' % off
     if is_ret:
+        a = Semantic
         Semantic.pop()
         tmp = Semantic.pop()
         if tmp[0] == 'return':
@@ -179,6 +180,9 @@ def action_func_end(is_ret=False):
                 if entry[1] != Symbols.Func_entry[1]:
                     print "return type doesn't match"
                     exit(-1)
+                if entry[3] == 'f':
+                    print "return a function pointer isn't supported yet"
+                    exit(-1)
             __Chunk.put((('return', None), None, None, tmp))
             __Section_text += __Chunk.produce_asm()
             Symbols.Is_ret = True
@@ -199,6 +203,23 @@ def action_equal():
     a = get_token(a)
     return (op, b, None, a)
 
+def action_call_func():
+    assert Semantic.pop()[1] == ')'
+    tmp = Semantic.pop()
+    args_stack = []
+    while tmp[1] != '(':
+        args_stack.append(get_token(tmp))
+        tmp = Semantic.pop()
+    entry = get_entry(get_token(Semantic[-1]))
+    if len(entry[4]) != len(args_stack):
+        print entry[0] + ": func args don't match"
+        exit(-1)
+    for a, b in zip(entry[4], args_stack):
+        if a != get_entry(b)[1]:
+            print entry[0] + ": func args don't match"
+            exit(-1)
+    pass
+
 def parse_action(name):
     if Symbols.Is_ret and name != 'action_func_end':
         return
@@ -210,6 +231,7 @@ def parse_action(name):
         action_func_para()
     elif name == 'action_func_end':
         if Symbols.Is_ret:
+            Symbols.Is_ret = False
             return
         action_func_end()
     elif name == 'action_add' or name == 'action_mul':
@@ -217,7 +239,11 @@ def parse_action(name):
     elif name == 'action_equal':
         __Chunk.put(action_equal())
     elif name == 'action_return':
+        if Symbols.Is_ret:
+            return
         action_func_end(True)
+    elif name == 'action_call_func':
+        action_call_func()
 
 def get_asm():
     global __Section_data

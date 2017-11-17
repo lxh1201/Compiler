@@ -87,7 +87,6 @@ class Chunk:
         if clear and entry[0] == 'symbol':
             for tmp in self.optz:
                 if entry in tmp[4] and (tmp[3] != None or tmp[5] != []):
-
                     tmp[4].remove(entry)
         if index >= 0:
             if entry[0] == 'constant':
@@ -301,7 +300,6 @@ class Chunk:
             return min_index
         else:
             return 0
-
 
     def produce_op_asm(self, entry, line):
         if entry[1] in self.register:

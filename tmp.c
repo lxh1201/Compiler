@@ -1,5 +1,11 @@
+int haha(int c)
+{
+    int a = 3;
+    return a;
+}
+
 int main(int argc, char arg)
 {
-    5+6;
-    return 4;
+    int b = 2;
+    int c = haha(b);
 }

@@ -35,8 +35,7 @@ Grammar = {
         '\x00'
     ],
     'Next_return': [
-        ['constant'],
-        ['symbol'],
+        ['I'],
         '\x00'
     ],
     'Equal': [
@@ -73,8 +72,20 @@ Grammar = {
         ['(', 'Biao', ')']
     ],
     'I': [
-        ['symbol'],
+        ['symbol', 'NextI'],
         ['constant']
+    ],
+    'NextI': [
+        ['(', 'Call_arg' ,')', 'action_call_func'],
+        '\x00'
+    ],
+    'Call_arg': [
+        ['I', 'Next_arg'],
+        '\x00'
+    ],
+    'Next_arg': [
+        [',', 'I', 'Next_arg'],
+        '\x00'
     ]
 }
 

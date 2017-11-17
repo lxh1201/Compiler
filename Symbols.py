@@ -12,4 +12,5 @@ Func_entry = []
 Func_stack = None
 Is_ret = False
 
+Func_argstab = []
 
