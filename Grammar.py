@@ -29,15 +29,26 @@ Grammar = {
         [';']
     ],
     'Text': [
+        ['return', 'Next_return', ';', 'action_return', 'Text'],
         ['type', 'symbol', 'action_declare', 'Dec', 'Text'],
         ['Equal', 'Text'],
         '\x00'
     ],
+    'Next_return': [
+        ['constant'],
+        ['symbol'],
+        '\x00'
+    ],
     'Equal': [
-        ['symbol', 'Equal_Biao', 'action_equal', 'NextEqual', ';']
+        ['symbol', 'Equal_Biao', 'action_equal', 'NextEqual', ';'],
+        ['Biao', 'NextBiao', ';']
     ],
     'NextEqual': [
         [',', 'symbol', 'Equal_Biao', 'action_equal', 'NextEqual'],
+        '\x00'
+    ],
+    'NextBiao': [
+        [',', 'Biao', 'NextBiao'],
         '\x00'
     ],
     'Equal_Biao': [
@@ -68,4 +79,4 @@ Grammar = {
 }
 
 Start = 'Program'
-End = Symbols.Delimiter_table + ['symbol', 'constant', 'type', 'w0', 'w1']
+End = Symbols.Delimiter_table + ['symbol', 'constant', 'type', 'w0', 'w1', 'return']

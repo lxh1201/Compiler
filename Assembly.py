@@ -45,6 +45,7 @@ class Chunk:
         self.tree_exist_table = {}
         self.optimized_quats = []
         self.text = ''
+        self.ret = None
 
     def get_name(self, entry):
         assert entry[0] in ['tmp_sym', 'symbol']
@@ -54,6 +55,9 @@ class Chunk:
             return Symbols.Global_symtab[entry[1][1]][0]
 
     def put(self, quat):
+        if quat[0][0] == 'return':
+            self.ret = quat[3]
+            return
         self.quats.append(quat)
 
     def get_optz_index(self, entry):
@@ -205,6 +209,8 @@ class Chunk:
                         self.optz[a][0].append(c)
                         self.optz[b][0].append(c)
         for entry in self.optz:
+            if self.ret != None and self.ret in entry[4] and entry[3] != None:
+                self.ret = ('constant', (entry[3], 'int'))
             if entry[6] == None and entry[3] != None:
                 for i in entry[4]:
                     self.optimized_quats.append((('delimiter', '='), ('constant', (entry[3], 'int')), None, i))
@@ -336,6 +342,14 @@ class Chunk:
         for i in range(len(self.register)):
             if self.active_register[i] >= 0:
                 self.text += '\t' + self.asm_op(self.register_name[i], self.location(self.register[i])) + '\n'
+        if self.ret != None:
+            if self.ret != self.register[0]:
+                if self.ret in self.register:
+                    i = self.register.index(self.ret)
+                    self.text += '\t' + self.asm_op(self.register_name[i], self.register_name[0]) + '\n'
+                else:
+                    self.text += '\t' + self.asm_op(self.location(self.ret), self.register_name[0]) + '\n'
+            self.text += '\tleave\n\tret\n'
 
     def produce_asm(self):
         self.optimize()

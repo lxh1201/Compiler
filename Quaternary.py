@@ -3,7 +3,7 @@ import Symbols
 from Assembly import Stack, Chunk
 
 Action = ['action_add', 'action_mul', 'action_equal', 'action_func_start', 'action_func_end',
-          'action_func_para', 'action_func', 'action_declare']
+          'action_func_para', 'action_func', 'action_declare', 'action_return']
 Semantic = [] # to create quaternary
 
 __Chunk = None # to create assembly
@@ -37,7 +37,7 @@ def produce_tmp(t1, t2):
             Symbols.Func_symtab.append(tmp)
             return ('tmp_sym', (0, len(Symbols.Func_symtab)-1))
 
-def get_entry(sym):
+def get_token(sym):
     if sym[0] in ['symbol', 'tmp_sym']:
         if type(sym[1]) != str:
             return sym
@@ -63,6 +63,17 @@ def get_entry(sym):
     else:
         return sym
 
+def get_entry(token):
+    assert token[0] in ['symbol', 'tmp_sym']
+    if Symbols.In_func:
+        if token[1][0] == 0:
+            return Symbols.Func_symtab[token[1][1]]
+        else:
+            return Symbols.Global_symtab[token[1][1]]
+    else:
+        assert token[1][0] == 0
+        return Symbols.Global_symtab[token[1][1]]
+
 def get_type(token):
     if token[0] in ['symbol', 'tmp_sym']:
         if Symbols.In_func and token[1][0] == 0:
@@ -79,8 +90,8 @@ def produce_binop():
     b = Semantic.pop()
     op = Semantic.pop()
     a = Semantic.pop()
-    b = get_entry(b)
-    a = get_entry(a)
+    b = get_token(b)
+    a = get_token(a)
     tmp = produce_tmp(get_type(a), get_type(b))
     Semantic.append(tmp)
     return (op, a, b, tmp)
@@ -112,12 +123,13 @@ def action_declare():
 
 
 def action_func_start():
-    global __Chunk
+    global __Chunk, __Section_text
     assert Semantic[-2][1][0] == 0
     Symbols.Func_entry = Symbols.Global_symtab[Semantic[-2][1][1]]
     Symbols.Func_entry[3] = 'f'
     Symbols.Func_entry[4] = [0, -1, []]
     Symbols.In_func = True
+    Symbols.Is_ret = False
     Symbols.Func_stack = Stack()
     __Chunk = Chunk()
 
@@ -137,10 +149,42 @@ def action_func_para():
     Symbols.Func_stack.put(entry)
     Symbols.Func_symtab.append(entry)
 
-def action_func_end():
+def action_func_end(is_ret=False):
     global __Section_text, __Chunk
     __Section_text += Symbols.Func_entry[0] + ':\n'
-    __Section_text +=__Chunk.produce_asm()
+    off = -Symbols.Func_stack.get_offset()
+    __Section_text += '\tpushl %ebp\n'
+    __Section_text += '\tmovl %esp, %ebp\n'
+    if off != 0:
+        __Section_text += '\tsubl $%d, %%esp\n' % off
+    if is_ret:
+        Semantic.pop()
+        tmp = Semantic.pop()
+        if tmp[0] == 'return':
+            if Symbols.Func_entry[1] == 'void':
+                __Section_text += __Chunk.produce_asm()
+                __Section_text += '\tleave\n\tret\n'
+            else:
+                print "return type doesn't match"
+                exit(-1)
+        else:
+            assert Semantic.pop()[0] == 'return'
+            tmp = get_token(tmp)
+            if tmp[0] == 'constant':
+                if Symbols.Func_entry[1] != tmp[1][1]:
+                    print "return type doesn't match"
+                    exit(-1)
+            elif tmp[0] == 'symbol':
+                entry = get_entry(tmp)
+                if entry[1] != Symbols.Func_entry[1]:
+                    print "return type doesn't match"
+                    exit(-1)
+            __Chunk.put((('return', None), None, None, tmp))
+            __Section_text += __Chunk.produce_asm()
+            Symbols.Is_ret = True
+    else:
+        __Section_text += __Chunk.produce_asm()
+        __Section_text += '\tret\n'
     __Chunk = None
     Symbols.Func_entry = []
     Symbols.Func_symtab = []
@@ -151,11 +195,13 @@ def action_equal():
     b = Semantic.pop()
     op = Semantic.pop()
     a = Semantic.pop()
-    b = get_entry(b)
-    a = get_entry(a)
+    b = get_token(b)
+    a = get_token(a)
     return (op, b, None, a)
 
 def parse_action(name):
+    if Symbols.Is_ret and name != 'action_func_end':
+        return
     if name == 'action_declare':
         action_declare()
     elif name == 'action_func_start':
@@ -163,11 +209,15 @@ def parse_action(name):
     elif name == 'action_func_para':
         action_func_para()
     elif name == 'action_func_end':
+        if Symbols.Is_ret:
+            return
         action_func_end()
     elif name == 'action_add' or name == 'action_mul':
         __Chunk.put(produce_binop())
     elif name == 'action_equal':
         __Chunk.put(action_equal())
+    elif name == 'action_return':
+        action_func_end(True)
 
 def get_asm():
     global __Section_data

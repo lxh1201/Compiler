@@ -31,6 +31,8 @@ class Scanner:
         self.index = i
         if name in Type_table:
             return ('type', name)
+        elif name == 'return':
+            return ('return', None)
         else:
             return ('symbol', name)
 
@@ -54,6 +56,7 @@ class Scanner:
         am = machine(trans_table, [8])
         digit = am.get(self.text[self.index:], spaces + Delimiter_table)
         if digit == '\x00':
+            print self.text[self.index]
             print 'numbers wrong'
             exit(-1)
         self.index += len(digit)
@@ -72,15 +75,12 @@ class Scanner:
         return ('delimiter', self.text[self.index-1])
 
     def read_chr(self):
-        i = self.index + 1
-        tmp = i
-        while self.text[i] != "'":
-            if i == self.length - 1:
+        i = self.index + 2
+        if self.text[i] != "'"and i == self.length - 1:
                 print "lost '"
                 exit(-1)
-            i += 1
         self.index = i + 1
-        s = self.text[tmp:i]
+        s = self.text[i-1]
         return ('char', s)
 
     def read_str(self):

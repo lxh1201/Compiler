@@ -20,20 +20,12 @@ class machine:
     def get(self, text, end):
         state = 0
         i = 0
-        first = 0
         while text[i] not in end:
             try:
                 state = self.T[state][text[i]]
             except KeyError:
                 return '\x00'
             i += 1
-            if text[i] in '+-' and first == 0:
-                try:
-                    state = self.T[state][text[i]]
-                except KeyError:
-                    return '\x00'
-                i += 1
-                first = 1
         try:
             state = self.T[state]['\x00']
         except KeyError:
