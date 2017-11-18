@@ -12,11 +12,7 @@ __Chunk = None # to create assembly
 __Section_data = '.section .data\n'
 __Section_text = '''
 .section .text
-.globl _start
-_start:
-\tcall main
-\tmovl $1, %eax
-\tint $0x80
+.globl main
 '''
 
 def produce_type(t1, t2):
@@ -188,7 +184,7 @@ def action_func_end(is_ret=False):
             Symbols.Is_ret = True
     else:
         __Section_text += __Chunk.produce_asm()
-        __Section_text += '\tret\n'
+        __Section_text += '\tleave\n\tret\n'
     __Chunk = None
     Symbols.Func_entry = []
     Symbols.Func_symtab = []
@@ -220,7 +216,7 @@ def action_call_func():
             exit(-1)
     for i in args_stack[::-1]:
         __Chunk.put((('delimiter', '='), i, None, ('symbol', (-1, -1))))
-    Semantic.append(('symbol', (-1, entry[0])))
+    Semantic.append(('symbol', (-1, entry[0], len(args_stack))))
 
 
 def parse_action(name):

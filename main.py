@@ -17,4 +17,8 @@ while tmp != None:
     l.read_token(tmp)
     tmp = s.get_token()
 
-print get_asm()
+out = open('out.s', 'w')
+
+out.write(get_asm())
+
+out.close()

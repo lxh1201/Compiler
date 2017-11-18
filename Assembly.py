@@ -384,6 +384,7 @@ class Chunk:
                     self.push_entry(entry[1])
                 elif entry[1][1][0] == -1:
                     self.text += '\tcall ' + entry[1][1][1] + '\n'
+                    self.text += '\taddl' + ' $' + str(entry[1][1][2] * 4) + ', %ebp\n'
                     self.text += '\t' + self.asm_op('%eax', self.location(entry[3])) + '\n'
                 else:
                     self.text += '\t' + self.asm_op(self.location(entry[1]), self.location(entry[3])) + '\n'

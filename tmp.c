@@ -1,7 +1,7 @@
 int test(int c)
 {
     int a = 3;
-    a = a + 3;
+    a = a + 4;
     return a;
 }
 
